@@ -19,11 +19,11 @@ class UserRepository implements UserInterfaceRepository
     {
 
         try {
-    return User::all();
-    } catch (ModelNotFoundException $e) {
+            return User::all();
+        } catch (ModelNotFoundException $e) {
 
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 
@@ -37,30 +37,84 @@ class UserRepository implements UserInterfaceRepository
     {
 
         try {
-        // Create a new User instance and save it
-        return User::create($userData);
-    } catch (ModelNotFoundException $e) {
+            // Create a new User instance and save it
+            return User::create($userData);
+        } catch (ModelNotFoundException $e) {
 
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 
     /**
+     * for auth
+     * serach array
      *@return string
-     *@param string $usermail
+     *@param string $search_param
      */
-    public function findUserByUsermail( string $usermail)
+    public function findUserByUsermail(string $UsermailOrUsername)
     {
 
         try {
-        $user = User::where("usermail", $usermail)->select('id','usermail', 'password')->first();
+            $user = User::where("usermail", "=", $UsermailOrUsername)
+                ->orWhere("username", "=", $UsermailOrUsername)
 
-        return $user;
+                /**
+                 *constitute data transfer object to client
+                 * @param id ,usermail , password
+                 */
+                ->select('userId', 'usermail', 'password')->first();
 
-    } catch (ModelNotFoundException $e) {
+            return $user;
+        } catch (ModelNotFoundException $e) {
 
-        return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
+
+    /**
+     * search users by param
+     * serach array
+     *@return string
+     *@param string $search_param
+     */
+    public function findUserByParam(string $search_param)
+    {
+
+        try {
+            $user = User::where("usermail", $search_param)
+                ->orWhere("username", $search_param)
+                ->orWhere("userId", $search_param)
+
+                /**
+                 *constitute data transfer object to client
+                 * @param id ,usermail , username
+                 */
+                ->select('userId', 'usermail', 'username','updated_at', 'created_at', 'created_at')->first();
+
+            return $user;
+        } catch (ModelNotFoundException $e) {
+
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    /**
+     *@return array $dated user
+     * @param array < int , string
+     */
+    // Save a new user with an array of data
+    public function updateUser(array $userData)
+    {
+
+        try {
+
+            $userId = $userData['userId'];
+            // find User instance and updated it
+            return User::where('userId', '=', $userId)->update($userData);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

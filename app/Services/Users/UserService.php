@@ -33,8 +33,7 @@ class UserService
 
         try {
             //pass the data to repository
-           return $this->userRepository->saveNewUser($userData);
-
+            return $this->userRepository->saveNewUser($userData);
         } catch (ModelNotFoundException $e) {
 
             return response()->json(['error' => $e->getMessage()], 500);
@@ -42,14 +41,46 @@ class UserService
     }
 
 
-    function findUserByUsermail( string $usermail)
+
+    /**
+     * @param search_param
+     */
+    function findUserByUsermail(string $UsermailOrUsername)
     {
 
         try {
             //pass the data for query
-        return  $this->userRepository->findUserByUsermail($usermail);
-
+            return  $this->userRepository->findUserByUsermail($UsermailOrUsername);
         } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+
+    /**
+     * @param search_param
+     */
+    function findUserByParam(string $search_param)
+    {
+        try {
+            //pass the data for query
+            return  $this->userRepository->findUserByParam($search_param);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+
+    public function updateUser($userData)
+    {
+
+        try {
+            //pass the data to repository
+            return $this->userRepository->updateUser($userData);
+        } catch (ModelNotFoundException $e) {
+
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

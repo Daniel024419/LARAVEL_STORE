@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->bigIncrements("id");
+            $table->string("userId");
             $table->string("username");
             $table ->string("usermail");
             $table ->string("password");

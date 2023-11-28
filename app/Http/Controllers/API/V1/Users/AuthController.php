@@ -28,7 +28,7 @@ class AuthController extends Controller
     {
 
         try {
-            
+
             //code...
             $validator = Validator::make($request->all(), [
                 'password' => ['required', 'string'],
@@ -38,9 +38,7 @@ class AuthController extends Controller
 
             //if validation fails , retrun error messages
             if ($validator->fails()) {
-                if ($request->expectsJson()) {
-                    throw ValidationException::withMessages($validator->errors()->toArray());
-                }
+
                 return response()->json(["error" => $validator->errors()], 400);
             }
 
@@ -59,20 +57,28 @@ class AuthController extends Controller
 
             $hashedPassword = $user['password'];
 
-
             // Verify the password
             if (Hash::check($password["password"], $hashedPassword)) {
 
                 // Attempt to authenticate the user
                 if (!Auth::attempt($request->only('usermail', 'password'))) {
-                    return response()->json(['error' => 'Invalid credentials'], 401);
+                    return response()->json(['error' => 'Invalid credentials', 'message' => 'Can not generate api token'], 401);
                 }
 
                 // Authentication successful, create a token
-                $token = $request->user()->createToken('api-token')->plainTextToken;
+                $token = $request->user()->createToken($user['usermail'])->plainTextToken;
 
-                // Return the token in the response
-                return response()->json(['message' => 'Login successful', 'api-token' => $token], 200);
+                /**
+                 * save user session
+                 * @var request session
+                 * @type array<int ,string >
+                 *
+                 */
+
+                return response()->json([
+                    'message' => 'Login successful ',
+                    'api-token' => $token, 'User' => ['id' => $user["id"], 'usermail' => $user["usermail"]]
+                ], 200);
             } else {
                 // Password is incorrect
                 return response()->json(['error' => 'Invalid Password ,Please try again'], 401);
@@ -85,28 +91,27 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * logout users
+     * @param Request $request
+     */
     public function logout(Request $request): JsonResponse
     {
 
         try {
+            // Check if the user is authenticated
+            if (Auth::check()) {
 
-    // Check if the user is authenticated
-    if (Auth::check()) {
-        // Logging for debugging within the authenticated context
-        Log::info('User ID: ' . Auth::user()->id);
+                // Revoke the token
+                $request->user()->currentAccessToken()->delete();
 
-        // Revoke the token by name
-        $request->user()->currentAccessToken()->delete();
+                return response()->json(['message' => 'Logout successful']);
+            } else {
+                return response()->json(['error' => 'User not authenticated'], 401);
+            }
+        } catch (RuntimeException $e) {
 
-        // Optionally, you can also clear the session or perform any other necessary actions
-
-        return response()->json(['message' => 'Logout successful']);
-    } else {
-        return response()->json(['error' => 'User not authenticated'], 401);
-    }
-    } catch (RuntimeException $e) {
-
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

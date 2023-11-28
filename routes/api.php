@@ -2,9 +2,7 @@
 use App\Http\Controllers\API\V1\Products\ProductController;
 use App\Http\Controllers\API\V1\Users\UsersController;
 use App\Http\Controllers\API\V1\Users\AuthController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 
 Route::controller(ProductController::class)
     ->name("store.")
@@ -23,7 +21,10 @@ Route::controller(UsersController::class)
     ->prefix("/v1/users")
     ->group(
         function () {
-            Route::get('/fetch-users', 'getAllUsers');
+
+            Route::get('/fetch-users', 'getAllUsers')->name("get_all_users");
+            Route::get('/search-users/{search_param}', 'searchUsers')->name("search_users")->whereAlphaNumeric('search_param');
+
         }
 );
 
@@ -34,14 +35,16 @@ Route::controller(UsersController::class)
     ->group(
 
         function () {
-            Route::post('/register', 'register');
+            Route::post('/register', 'register')->name("register");
+            Route::post('/update', 'updateUser')->middleware(['auth:sanctum'])->name("update_user");
         }
 );
 
 // Authenticate users
-Route::name("users.")
+Route::controller(AuthController::class)
+     ->name("users.")
     ->prefix("/v1/users")
     ->group(function () {
-        Route::post('/login', [AuthController::class, 'login'])->name('api.login');
-        Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::post('/login', 'login')->name('api.login');
+        Route::get('/logout', 'logout')->middleware(['auth:sanctum'])->name('logout');
     });
